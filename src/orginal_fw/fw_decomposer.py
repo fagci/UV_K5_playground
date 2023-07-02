@@ -7,22 +7,19 @@ class FwDecompozer:
       self.file = open(file, 'rb')
 
    def save_vector_table(self, filename):
-      output = open(filename, 'wb')
-      self.file.seek(self.vector_table_address, 0)
-      output.write(self.file.read(self.vector_table_size))
-      output.close()
+      with open(filename, 'wb') as output:
+         self.file.seek(self.vector_table_address, 0)
+         output.write(self.file.read(self.vector_table_size))
 
    def save_part1(self, filename):
-      output = open(filename, 'wb')
-      self.file.seek(0)
-      output.write(self.file.read(self.vector_table_address))
-      output.close()
+      with open(filename, 'wb') as output:
+         self.file.seek(0)
+         output.write(self.file.read(self.vector_table_address))
 
    def save_part2(self, filename):
-      output = open(filename, 'wb')
-      self.file.seek(self.vector_table_address + self.vector_table_size, 0)
-      output.write(self.file.read())
-      output.close()
+      with open(filename, 'wb') as output:
+         self.file.seek(self.vector_table_address + self.vector_table_size, 0)
+         output.write(self.file.read())
 
 if __name__ == '__main__':
    args = sys.argv
