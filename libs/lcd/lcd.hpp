@@ -171,7 +171,7 @@ public:
       const auto *const pFontRawData = pCurrentFont->GetRaw(c8Character);
       auto *pCoursorPosition = Bitmap.GetCoursorData(u16CoursorPosition);
       auto const CopySize = pCurrentFont->GetSizeY(c8Character) * (BitmapType::LineHeight / 8);
-      if (pCoursorPosition && !(BitmapType::LineHeight % 8))
+      if (pCoursorPosition && !(BitmapType::LineHeight & 0x07)) // % 8
       {
          if (pFontRawData)
             memcpy(pCoursorPosition, pFontRawData, CopySize);

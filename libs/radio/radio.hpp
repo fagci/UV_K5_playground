@@ -115,16 +115,14 @@ public:
   static void ToggleAFDAC(bool enabled) {
     auto Reg = Fw.BK4819Read(0x30);
     Reg &= ~(1 << 9);
-    if (enabled)
-      Reg |= (1 << 9);
+    Reg |= (enabled << 9);
     Fw.BK4819Write(0x30, Reg);
   }
 
   static void ToggleRXDSP(bool enabled) {
     auto Reg = Fw.BK4819Read(0x30);
     Reg &= ~1;
-    if (enabled)
-      Reg |= 1;
+    Reg |= enabled;
     Fw.BK4819Write(0x30, Reg);
   }
 
