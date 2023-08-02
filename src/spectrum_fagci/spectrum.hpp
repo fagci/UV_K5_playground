@@ -61,9 +61,12 @@ public:
     u8 measurementsCount = GetMeasurementsCount();
 
     for (u8 i = 0; i < measurementsCount; ++i, fMeasure += scanStep) {
-      btn = Fw.PollKeyboard();
+      auto btn = Fw.PollKeyboard();
       if (btn != 255 && btn != 11 && btn != 12) {
         break;
+      }
+      if (rssiHistory[i] == 255) {
+        continue;
       }
       RadioDriver.SetFrequency(fMeasure);
       rssi = rssiHistory[i] = GetRssi();
@@ -85,7 +88,11 @@ public:
 
   void DrawSpectrum() {
     for (u8 x = 0; x < 128; ++x) {
-      Display.DrawHLine(Rssi2Y(rssiHistory[X2I(x)]), DrawingEndY, x);
+      auto v = rssiHistory[X2I(x)];
+      if (v == 255) {
+        continue;
+      }
+      Display.DrawHLine(Rssi2Y(v), DrawingEndY, x);
     }
   }
 
@@ -145,14 +152,8 @@ public:
     }
   }
 
-  void HandleUserInput() {
-    switch (btn) {
-    case 2:
-      UpdateBWMul(1);
-      break;
-    case 8:
-      UpdateBWMul(-1);
-      break;
+  void OnKey(u8 key) {
+    switch (key) {
     case 3:
       UpdateRssiTriggerLevel(1);
       break;
@@ -165,6 +166,19 @@ public:
     case 12: // down
       UpdateCurrentFreq(-frequencyChangeStep);
       break;
+    }
+  }
+
+  void OnKeyPress(u8 key) {}
+
+  void OnKeyDown(u8 key) {
+    switch (key) {
+    case 2:
+      UpdateBWMul(1);
+      break;
+    case 8:
+      UpdateBWMul(-1);
+      break;
     case 14:
       UpdateFreqChangeStep(100_KHz);
       break;
@@ -174,6 +188,19 @@ public:
     case 5:
       ToggleBacklight();
       break;
+    case 4:
+      Blacklist();
+      break;
+    }
+  }
+
+  void HandleUserInput() {
+    OnKey(btn);
+    if (btn == 255 && btnPrev != 255) {
+      OnKeyPress(btnPrev);
+    }
+    if (btn != 255 && btnPrev == 255) {
+      OnKeyDown(btn);
     }
   }
 
@@ -223,6 +250,11 @@ public:
     OnUserInput();
   }
 
+  void Blacklist() {
+    rssiHistory[peakI] = 255;
+    OnUserInput();
+  }
+
   void ResetPeak() {
     peakRssi = 0;
     peakF = currentFreq;
@@ -255,6 +287,7 @@ public:
     }
     Update();
     Render();
+    btnPrev = btn;
   }
 
 private:
@@ -272,8 +305,7 @@ private:
   void RestoreOldAFSettings() { Fw.BK4819Write(0x47, oldAFSettings); }
 
   void Listen(u16 durationMs) {
-    for (u8 i = 0; i < 16 && btn == 255; ++i) {
-      btn = Fw.PollKeyboard();
+    for (u8 i = 0; i < 16 && Fw.PollKeyboard() == 255; ++i) {
       Fw.DelayMs(durationMs >> 4);
     }
   }
@@ -344,7 +376,8 @@ private:
   u8 bwMul;
   u8 rssiTriggerLevel;
 
-  u8 btn;
+  u8 btn = 255;
+  u8 btnPrev = 255;
   u32 currentFreq;
   u16 oldAFSettings;
 
