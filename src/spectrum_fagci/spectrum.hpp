@@ -23,15 +23,11 @@ public:
   CSpectrum()
       : DisplayBuff(FwData.pDisplayBuffer), Display(DisplayBuff),
         FontSmallNr(FwData.pSmallDigs), frequencyChangeStep(400_KHz), bwMul(2),
-        rssiTriggerLevel(65) {
+        rssiTriggerLevel(100) {
     Display.SetFont(&FontSmallNr);
   };
 
-  bool ListenPeak() {
-    if (peakRssi < rssiTriggerLevel) {
-      return false;
-    }
-
+  void ListenPeak() {
     if (fMeasure != peakF) {
       fMeasure = peakF;
       RadioDriver.SetFrequency(fMeasure);
@@ -43,8 +39,6 @@ public:
 
     peakRssi = GetRssi();
     rssiHistory[peakI] = peakRssi;
-
-    return true;
   }
 
   void Scan() {
@@ -62,11 +56,15 @@ public:
 
     for (u8 i = 0; i < measurementsCount; ++i, fMeasure += scanStep) {
       auto btn = Fw.PollKeyboard();
-      if (btn != 255 && btn != 11 && btn != 12) {
-        break;
-      }
-      if (rssiHistory[i] == 255) {
-        continue;
+      bool notUpDown = btn != 11 && btn != 12;
+      bool notBwMul = btn != 2 && btn != 8;
+      if (notUpDown) {
+        if (notBwMul && rssiHistory[i] == 255) {
+          continue;
+        }
+        if (btn != 255) {
+          break;
+        }
       }
       RadioDriver.SetFrequency(fMeasure);
       rssi = rssiHistory[i] = GetRssi();
@@ -88,11 +86,10 @@ public:
 
   void DrawSpectrum() {
     for (u8 x = 0; x < 128; ++x) {
-      auto v = rssiHistory[X2I(x)];
-      if (v == 255) {
-        continue;
+      auto v = rssiHistory[x >> BWMul2XDiv()];
+      if (v != 255) {
+        Display.DrawHLine(Rssi2Y(v), DrawingEndY, x);
       }
-      Display.DrawHLine(Rssi2Y(v), DrawingEndY, x);
     }
   }
 
@@ -103,8 +100,8 @@ public:
     Display.SetCoursorXY(51, 0);
     Display.PrintFixedDigitsNumber2(GetBW());
 
-    /* Display.SetCoursorXY(107, 8);
-    Display.PrintFixedDigitsNumber2(peakRssi, 0); */
+    /* Display.SetCoursorXY(0, 0);
+    Display.PrintFixedDigitsNumber2(rssiMinV, 0); */
 
     Display.SetCoursorXY(86, 0);
     Display.PrintFixedDigitsNumber2(peakF);
@@ -116,7 +113,7 @@ public:
     Display.PrintFixedDigitsNumber2(frequencyChangeStep);
 
     /* Display.SetCoursorXY(0, 8);
-    Display.PrintFixedDigitsNumber2(rssiTriggerLevel, 0); */
+    Display.PrintFixedDigitsNumber2(rssiMaxV, 0); */
   }
 
   void DrawRssiTriggerLevel() {
@@ -169,8 +166,6 @@ public:
     }
   }
 
-  void OnKeyPress(u8 key) {}
-
   void OnKeyDown(u8 key) {
     switch (key) {
     case 2:
@@ -188,26 +183,31 @@ public:
     case 5:
       ToggleBacklight();
       break;
-    case 4:
+    case 0:
       Blacklist();
       break;
     }
+    ResetPeak();
   }
 
-  void HandleUserInput() {
-    OnKey(btn);
-    if (btn == 255 && btnPrev != 255) {
-      OnKeyPress(btnPrev);
+  bool HandleUserInput() {
+    btnPrev = btn;
+    btn = Fw.PollKeyboard();
+    if (btn == ExitKey) {
+      DeInit();
+      return false;
     }
+    OnKey(btn);
     if (btn != 255 && btnPrev == 255) {
       OnKeyDown(btn);
     }
+    return true;
   }
 
   void Render() {
     DisplayBuff.ClearAll();
     DrawTicks();
-    DrawArrow(I2X(peakI));
+    DrawArrow(peakI << BWMul2XDiv());
     DrawSpectrum();
     DrawRssiTriggerLevel();
     DrawNums();
@@ -215,90 +215,71 @@ public:
   }
 
   void Update() {
-    if (bDisplayCleared) {
-      currentFreq = RadioDriver.GetFrequency();
-      OnUserInput();
-      oldAFSettings = Fw.BK4819Read(0x47);
-      MuteAF();
+    if (peakRssi >= rssiTriggerLevel) {
+      ListenPeak();
+      return;
     }
-    bDisplayCleared = false;
-
-    HandleUserInput();
-
-    if (!ListenPeak())
-      Scan();
+    Scan();
   }
 
   void UpdateRssiTriggerLevel(i32 diff) {
     rssiTriggerLevel = clamp(rssiTriggerLevel + diff, 10, 255);
-    OnUserInput();
   }
 
   void UpdateBWMul(i32 diff) {
     bwMul = clamp(bwMul + diff, 0, 4);
     frequencyChangeStep = 100_KHz << bwMul;
-    OnUserInput();
   }
 
   void UpdateCurrentFreq(i64 diff) {
     currentFreq = clamp(currentFreq + diff, 18_MHz, 1300_MHz);
-    OnUserInput();
   }
 
   void UpdateFreqChangeStep(i64 diff) {
     frequencyChangeStep = clamp(frequencyChangeStep + diff, 100_KHz, 2_MHz);
-    OnUserInput();
   }
 
-  void Blacklist() {
-    rssiHistory[peakI] = 255;
-    OnUserInput();
-  }
-
-  void ResetPeak() {
-    peakRssi = 0;
-    peakF = currentFreq;
-    peakT = 0;
-  }
-
-  void OnUserInput() {
-    ResetPeak();
-    Fw.DelayMs(90);
-  }
+  void Blacklist() { rssiHistory[peakI] = 255; }
 
   void Handle() {
     if (RadioDriver.IsLockedByOrgFw()) {
       return;
     }
 
-    if (!working) {
-      if (IsFlashLightOn()) {
-        working = true;
-        TurnOffFlashLight();
-      }
-      return;
+    if (!isInitialized && IsFlashLightOn()) {
+      TurnOffFlashLight();
+      Init();
     }
 
-    btn = Fw.PollKeyboard();
-    if (btn == ExitKey) {
-      working = false;
-      RestoreParams();
-      return;
+    if (isInitialized) {
+      if (!HandleUserInput())
+        return;
+
+      Update();
+      Render();
     }
-    Update();
-    Render();
-    btnPrev = btn;
   }
 
 private:
-  void RestoreParams() {
-    if (!bDisplayCleared) {
-      bDisplayCleared = true;
-      DisplayBuff.ClearAll();
-      Fw.FlushFramebufferToScreen();
-      RadioDriver.SetFrequency(currentFreq);
-      RestoreOldAFSettings();
-    }
+  void Init() {
+    currentFreq = RadioDriver.GetFrequency();
+    oldAFSettings = Fw.BK4819Read(0x47);
+    MuteAF();
+    isInitialized = true;
+  }
+
+  void DeInit() {
+    DisplayBuff.ClearAll();
+    Fw.FlushFramebufferToScreen();
+    RadioDriver.SetFrequency(currentFreq);
+    RestoreOldAFSettings();
+    isInitialized = false;
+  }
+
+  void ResetPeak() {
+    peakRssi = 0;
+    peakF = currentFreq;
+    peakT = 0;
   }
 
   void MuteAF() { Fw.BK4819Write(0x47, 0); }
@@ -324,8 +305,6 @@ private:
     }
     return 32;
   }
-  u8 X2I(u8 x) { return x >> BWMul2XDiv(); }
-  u8 I2X(u8 x) { return x << BWMul2XDiv(); }
 
   void ResetRSSI() {
     RadioDriver.ToggleRXDSP(false);
@@ -335,8 +314,8 @@ private:
   u8 GetRssi() {
     ResetRSSI();
 
-    Fw.DelayUs(800);
-    return Fw.BK4819Read(0x67);
+    Fw.DelayUs(1600);
+    return Fw.BK4819Read(0x67) & 0x1ff;
   }
 
   bool IsFlashLightOn() { return GPIOC->DATA & GPIO_PIN_3; }
@@ -345,13 +324,10 @@ private:
     *FwData.p8FlashLightStatus = 3;
   }
 
-  void ToggleBacklight() {
-    GPIOB->DATA ^= GPIO_PIN_6;
-    OnUserInput();
-  }
+  void ToggleBacklight() { GPIOB->DATA ^= GPIO_PIN_6; }
 
   u8 Rssi2Y(u8 rssi) {
-    return clamp(DrawingEndY - (rssi - 30), 1, DrawingEndY);
+    return clamp(DrawingEndY - ((rssi >> 1) - 20), 1, DrawingEndY);
   }
 
   i32 clamp(i32 v, i32 min, i32 max) {
@@ -381,6 +357,5 @@ private:
   u32 currentFreq;
   u16 oldAFSettings;
 
-  bool working = false;
-  bool bDisplayCleared = true;
+  bool isInitialized = false;
 };
