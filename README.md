@@ -24,7 +24,7 @@ Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be 
 * press **1** / **7** to increase / decrease resolution (smaller resolution == faster update rate)
 * press **PTT** or **EXIT** to disable spectrum view  
 
-## src/spectrum_fagci
+## src/spectrum_fagci ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
 
 Spectrum scanner by [@fagci](https://github.com/fagci)
 
