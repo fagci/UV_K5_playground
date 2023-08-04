@@ -28,6 +28,8 @@ Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be 
 
 Spectrum scanner by @fagci
 
+![spectrum_fagci](./docs/spectrum_fagci.gif)
+
 [videos](https://youtube.com/playlist?list=PL67vBSofOrHMyXOEhonOzQz5gJzsZFiDq)
 
 [download mod](https://github.com/piotr022/UV_K5_playground/releases/latest)
