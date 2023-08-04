@@ -1,14 +1,11 @@
 import sys
 
 def merge_files(in1, in2, out):
-    f1 = open(in1, 'rb')
-    f2 = open(in2, 'rb')
-    fo = open(out, 'wb')
-
-    fo.write(f1.read())
-    fo.write(f2.read())
-    fo.close()
-    f1.close()
+    with open(in1, 'rb') as f1:
+        f2 = open(in2, 'rb')
+        with open(out, 'wb') as fo:
+            fo.write(f1.read())
+            fo.write(f2.read())
     f2.close() 
 
 if __name__ == '__main__':
