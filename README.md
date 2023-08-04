@@ -12,25 +12,13 @@ AFSK messenger with T9 typing support
 * if message is cleared use **EXIT** to exit messenger view  
 * There is no timeout for the button. If you want to type letters located on the same button in a row, use an asterisk (*) to confirm the selected character  
 
-## src/spectrum ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
-![spectrum](./docs/spectrum.gif)  
-**update**  
-Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be controled via keyboard.
-
-* download mod [uv_k5_01_26_spectrum_2MHz_encoded.bin](https://github.com/piotr022/UV_K5_playground/releases/latest)
-* to enable spectum view press **flash light button**
-* hold **up** or **down** key to change center frequency
-* press **8** / **2** for zoom in / zoom out
-* press **1** / **7** to increase / decrease resolution (smaller resolution == faster update rate)
-* press **PTT** or **EXIT** to disable spectrum view  
-
 ## src/spectrum_fagci ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
 
 Spectrum scanner by [@fagci](https://github.com/fagci)
 
 ![spectrum_fagci](./docs/spectrum_fagci.gif)
 
-[videos](https://youtube.com/playlist?list=PL67vBSofOrHMyXOEhonOzQz5gJzsZFiDq)
+[more videos](https://youtube.com/playlist?list=PL67vBSofOrHMyXOEhonOzQz5gJzsZFiDq)
 
 [download mod](https://github.com/piotr022/UV_K5_playground/releases/latest)
 
@@ -58,6 +46,18 @@ How to operate:
 * press **5** to toggle backlight
 * press **0** to remove frequency from sspectrum to scan
 * press **EXIT** to disable spectrum view
+
+## src/spectrum ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
+![spectrum](./docs/spectrum.gif)  
+**update**  
+Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be controled via keyboard.
+
+* download mod [uv_k5_01_26_spectrum_2MHz_encoded.bin](https://github.com/piotr022/UV_K5_playground/releases/latest)
+* to enable spectum view press **flash light button**
+* hold **up** or **down** key to change center frequency
+* press **8** / **2** for zoom in / zoom out
+* press **1** / **7** to increase / decrease resolution (smaller resolution == faster update rate)
+* press **PTT** or **EXIT** to disable spectrum view  
 
 ## src/rssi_sbar ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
 ![rssi printer](./docs/rssi_sbar.png)  
