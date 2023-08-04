@@ -26,7 +26,7 @@ Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be 
 
 ## src/spectrum_fagci
 
-Spectrum scanner by @fagci
+Spectrum scanner by [@fagci](https://github.com/fagci)
 
 ![spectrum_fagci](./docs/spectrum_fagci.gif)
 
