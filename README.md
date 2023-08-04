@@ -24,6 +24,39 @@ Spectrum scanner. It prints a spectrum graph. Zoom in well as resolution can be 
 * press **1** / **7** to increase / decrease resolution (smaller resolution == faster update rate)
 * press **PTT** or **EXIT** to disable spectrum view  
 
+## src/spectrum_fagci
+
+Spectrum scanner by @fagci
+
+[videos](https://youtube.com/playlist?list=PL67vBSofOrHMyXOEhonOzQz5gJzsZFiDq)
+
+[download mod](https://github.com/piotr022/UV_K5_playground/releases/latest)
+
+Features:
+
+* no scan sound
+* squelch by user input level
+* 0.2 .. 3.2MHz frequency ranges
+* ticks by frequency (100,500,1000KHz)
+* catch signal peak frequency
+* automatic frequency change step
+* automatic scan step
+* frequency blacklist to remove unwanted signals
+* backlight control
+
+How to start:
+
+* set squelch level to 0 or go into monitor mode before enabling mod
+* to enable spectum view press **flash light button**
+
+How to operate:
+
+* press **8** / **2** for zoom in / zoom out
+* press and hold **3** / **9** to set squelch level
+* press **5** to toggle backlight
+* press **0** to remove frequency from sspectrum to scan
+* press **EXIT** to disable spectrum view
+
 ## src/rssi_sbar ![auto release build](https://github.com/piotr022/UV_K5_playground/actions/workflows/c-cpp.yml/badge.svg)
 ![rssi printer](./docs/rssi_sbar.png)  
 sbar with calibrated S steps, on TX prints mic in amplitude
